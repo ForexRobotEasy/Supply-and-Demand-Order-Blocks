@@ -1,0 +1,85 @@
+mql5
+//+------------------------------------------------------------------+
+//|                          Supply and Demand Order Blocks           |
+//|                        Developer: forexroboteasy.com              |
+//|                        Development: Forex Robot Easy Team         |
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//|                    User-defined input parameters                  |
+//+------------------------------------------------------------------+
+input int period = 20; // Period for identifying supply and demand zones
+
+//+------------------------------------------------------------------+
+//|                          Indicator buffers                        |
+//+------------------------------------------------------------------+
+double supplyBuffer[];
+double demandBuffer[];
+
+//+------------------------------------------------------------------+
+//|                     Indicator initialization                      |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+    // Set buffer arrays
+    ArraySetAsSeries(supplyBuffer, true);
+    ArraySetAsSeries(demandBuffer, true);
+    
+    // Define indicator properties
+    SetIndexStyle(0, DRAW_ARROW);
+    SetIndexArrow(0, 159);
+    SetIndexBuffer(0, supplyBuffer);
+    
+    SetIndexStyle(1, DRAW_ARROW);
+    SetIndexArrow(1, 159);
+    SetIndexBuffer(1, demandBuffer);
+    
+    // Set indicator labels
+    IndicatorSetString(INDICATOR_SHORTNAME, 'Supply & Demand Order Blocks');
+    IndicatorSetString(0, 'Supply Zone');
+    IndicatorSetString(1, 'Demand Zone');
+
+    return(INIT_SUCCEEDED);
+}
+
+//+------------------------------------------------------------------+
+//|                       Custom indicator logic                      |
+//+------------------------------------------------------------------+
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime &time[],
+                const double &open[],
+                const double &high[],
+                const double &low[],
+                const double &close[],
+                const long &tick_volume[],
+                const long &volume[],
+                const int &spread[])
+{
+    // Calculate supply and demand zones
+    for (int i = period; i < rates_total; i++)
+    {
+        double highestHigh = High[i - period];
+        double lowestLow = Low[i - period];
+        
+        // Identify supply zone
+        for (int j = i - period; j <= i; j++)
+        {
+            if (High[j] > highestHigh)
+                highestHigh = High[j];
+        }
+        
+        supplyBuffer[i] = highestHigh;
+        
+        // Identify demand zone
+        for (int k = i - period; k <= i; k++)
+        {
+            if (Low[k] < lowestLow)
+                lowestLow = Low[k];
+        }
+        
+        demandBuffer[i] = lowestLow;
+    }
+    
+    return(rates_total);
+}
